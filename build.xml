@@ -1,5 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="android_rules" default="debug">
+<project name="AntReplaceChannel" default="deployableAllSrc">
+	
+		<!-- 是否使用签名 -->
+		<property name="has.keystore" value="true" />
+		<!-- 签名密码 -->
+		<property name="has.password" value="true" />
+		<!--签名相关的key -->
+		<property name="key.store" value="key" />
+		<property name="key.alias" value="AntReplaceChannel" />
+		<!-- 签名相关的密码 -->
+		<property name="key.store.password" value="123456" />
+		<property name="key.alias.password" value="123456" />
+		
+		<property file="project.properties" />
+	
+		<!-- sdk的路径 -->
+		<property name="sdk.dir" value="/Users/chenkai/android/adt-bundle-mac-x86_64_old/sdk"/>
 
     <!--
         This build file is imported by the project build file. It contains
@@ -1164,8 +1180,34 @@
          only if release-sign is true (set in -release-check,
          called by -release-no-sign)-->
     <target name="release"
-                depends="-set-release-mode, -release-obfuscation-check, -package, -post-package, -release-prompt-for-password, -release-nosign, -release-sign, -post-build"
+                depends="clean, replace_src, -set-release-mode, -release-obfuscation-check, -package, -post-package, -release-prompt-for-password, -release-nosign, -release-sign, -post-build, restore_manifest"
                 description="Builds the application in release mode.">
+                <!-- only create apk if *not* a library project -->
+        <do-only-if-not-library elseText="Library project: do not create apk..." >
+            <sequential>
+                <property name="out.unaligned.file" location="${out.absolute.dir}/${ant.project.name}-release-unaligned.apk" />
+
+                <!-- Signs the APK -->
+                <echo>Signing final apk...</echo>
+                <signjar
+                        jar="${out.packaged.file}"
+                        signedjar="${out.unaligned.file}"
+                        keystore="${key.store}"
+                        storepass="${key.store.password}"
+                        alias="${key.alias}"
+                        keypass="${key.alias.password}"
+                        verbose="${verbose}" />
+
+                <!-- Zip aligns the APK -->
+                <zipalign-helper in.package="${out.unaligned.file}"
+                                           out.package="${out.final.file}" />
+                <echo>Release Package: ${out.final.file}</echo>
+                
+                <xpath input="AndroidManifest.xml" expression="/manifest/@android:versionName" output="build.versionName" default="0.1" />
+   						 	<copy file ="${out.final.file}" tofile = "release/zhaojiecao_${build.versionName}_${src}.apk" overwrite = "true"/>
+            </sequential>
+        </do-only-if-not-library>
+        <record-build-info />
     </target>
 
     <!-- ******************************************************* -->
@@ -1535,4 +1577,24 @@
         <echo>              device. Also uninstall tested package if applicable</echo>
         <echo>              unless 'nodeps' is used as well.</echo>
     </target>
+    <target name="replace_src">
+		<copy file ="AndroidManifest.xml" todir = "temp"/>
+		<replace file ="AndroidManifest.xml" token="CHANNEL_VALUE" value="${src}" encoding="utf-8"/>
+		<replace file ="AndroidManifest.xml" token="VALUE" value="${value}" encoding="utf-8"/>
+	</target>
+		
+	<target name="restore_manifest">
+		<copy file ="temp\AndroidManifest.xml" todir = "" overwrite = "true"/>
+	</target>
+	
+	<target name="deployableAllSrc" description="build all device packet">
+	    <!-- value值不能是纯数字 -->
+		<antcall target="release" inheritAll="true"><param name="src" value="360sc" /><param name="value" value="_12" /></antcall><!--奇虎360  -->
+		<antcall target="release" inheritAll="true"><param name="src" value="anzhuo" /><param name="value" value="_34" /></antcall><!--安卓市场  -->
+		<antcall target="release" inheritAll="true"><param name="src" value="91sc" /><param name="value" value="_56" /></antcall><!-- 91 -->
+		<antcall target="release" inheritAll="true"><param name="src" value="wdj" /><param name="value" value="_78" /></antcall><!-- 豌豆荚 -->
+		<antcall target="release" inheritAll="true"><param name="src" value="xiaomi" /><param name="value" value="_90" /></antcall><!-- 小米 -->
+
+		<antcall target="clean" inheritAll="true"/>
+	</target>
 </project>

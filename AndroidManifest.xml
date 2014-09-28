@@ -21,6 +21,15 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <meta-data
+            android:name="CHANNEL"
+            android:value="CHANNEL_VALUE" >
+        </meta-data>
+        <meta-data
+            android:name="NAME"
+            android:value="VALUE" >
+        </meta-data>
     </application>
 
 </manifest>
