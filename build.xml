@@ -1204,7 +1204,7 @@
                 <echo>Release Package: ${out.final.file}</echo>
                 
                 <xpath input="AndroidManifest.xml" expression="/manifest/@android:versionName" output="build.versionName" default="0.1" />
-   						 	<copy file ="${out.final.file}" tofile = "release/zhaojiecao_${build.versionName}_${src}.apk" overwrite = "true"/>
+   						 	<copy file ="${out.final.file}" tofile = "release/AntReplaceChannel_${build.versionName}_${src}.apk" overwrite = "true"/>
             </sequential>
         </do-only-if-not-library>
         <record-build-info />
